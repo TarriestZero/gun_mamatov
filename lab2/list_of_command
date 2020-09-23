@@ -1,0 +1,15 @@
+Для статической:
+    gcc -c func_copy.c 
+    ar rc libFUNC_COPY.a func_copy.o
+    ranlib libFUNC_COPY.a 
+    gcc lab2.c -L. -lFUNC_COPY
+    ./a.out inpute outpute d         // запуск
+
+Для динамической:
+    gcc -fPIC -c func_copy.c
+    gcc -shared -o libDINCOPY.so func_copy.o
+    gcc -c lab2.c 
+    gcc lab2.o -L . -lDINCOPY -o a_din.out
+    LD_LIBRARY_PATH=/home/synyster/gun_lab_mamatov/lab2
+    export LD_LIBRARY_PATH
+    ./a_din.out inpute outpute d    // это запуск
