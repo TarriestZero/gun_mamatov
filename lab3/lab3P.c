@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     for (i = 1; i <= argc / 3; i++) { 
         status=waitpid(pid[i],&stat,0);
         if (pid[i] == status) {
-        printf("File %s done,  result=%d\n",argv[i],WEXITSTATUS(stat));
+        printf("File %s done,  result=%d\n",argv[i + (2 * (i - 1))],WEXITSTATUS(stat));
         }
     }
     return 0;
