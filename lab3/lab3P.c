@@ -14,15 +14,15 @@ int main(int argc, char *argv[]) {
     char file1[20], file2[20];
     char* sim;
     // для всех файлов, перечисленных в командной строке 
-    if (argc<2) {
-        printf("Usage: file textfile1 textfile2 ...\n");
+    if (!(((argc - 1) % 3) == 0) || (argc < 3)) {
+        printf("Usage: file textfile1 textfile2 simvol ...\n");
         exit(-1);
         }
-    for (i = 1; i< argc ; i = i + 3) { 
+    for (i = 1; i <= argc / 3 ; i++) { 
     // запускаем дочерний процесс 
-    strcpy(file1,argv[i]);
-    strcpy(file2,argv[i+1]);
-    sim = argv[i+2];
+    strcpy(file1,argv[i + (2 * (i - 1))]);
+    strcpy(file2,argv[(i + 1) + (2 * (i - 1))]);
+    sim = argv[(i + 2) + (2 * (i - 1))];
     pid[i] = fork(); 
     if (pid[i] == 0) {
     // если выполняется дочерний процесс 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     }
     sleep(1);
     // ожидание окончания выполнения всех запущенных процессов
-    for (i = 1; i< argc; i++) { 
+    for (i = 1; i <= argc / 3; i++) { 
         status=waitpid(pid[i],&stat,0);
         if (pid[i] == status) {
         printf("File %s done,  result=%d\n",argv[i],WEXITSTATUS(stat));
