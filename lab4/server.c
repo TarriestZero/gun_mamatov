@@ -50,7 +50,10 @@ void server(int readfd, int writefd)
         if ((buff[i+1] == ' ') && (trig == 2))
         {
             simvol = buff[i + 2];
+            printf("simvol -- %c\n", simvol);
+            break;
         }
+        
     }
 
     fd = open (infile, O_RDONLY);

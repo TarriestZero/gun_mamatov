@@ -10,11 +10,17 @@
 #define MAXLINE  80
 
 
-void client(int readfd[][2], int writefd[][2], size_t n, char massive[][20])
+void client(int readfd[][2], int writefd[][2], size_t n, char massive[][30])
 {
     ssize_t f;
     char buff[MAXLINE];
     /* запись полного имени в канал IPC */
+    /*
+    for (int i = 0; i < n; i++)
+    {
+        printf("PachkaN%d - %s\n",i,massive[i]);
+    }
+    */
     for(int i = 0; i < n; i++) write(writefd[i][1], massive[i], strlen(massive[i]));
     /* считывание из канала, вывод в stdout */
     for (int i = 0; i < n; i++){

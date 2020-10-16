@@ -14,7 +14,7 @@
 #define MAXLINE  80
 
 int main(int argc, char *argv[]){      
-    char bufarg[argc * 20], lenh = 0;  
+    char lenh = 0;  
     
     if (!(((argc - 1) % 3) == 0) || (argc < 3)) {
         printf("Usage: file textfile1 textfile2 simvol ...\n");
@@ -22,23 +22,18 @@ int main(int argc, char *argv[]){
     }
     int lenargvs[(argc / 3) + 1];
     lenargvs[0] = 0;
-    char mass_of_ukaz[argc / 3][20];   // массив указателей на начало новых 3х входных параметров
+    char mass_of_ukaz[argc / 3][30];   // массив указателей на начало новых 3х входных параметров
     for (size_t g = 0; g < argc / 3; g++) // 
     {
         for (size_t i = 1; i < 4; i++)  // копирование входных переменных в строку.
         {
-            strcpy(&bufarg[lenh], argv[i + (g * 3)]);
-            strcpy(&bufarg[strlen(argv[i + (g * 3)]) + lenh], " ");
+            strncpy(&mass_of_ukaz[g][lenh], argv[i + (g * 3)], strlen(argv[i + (g * 3)]));
+            strncpy(&mass_of_ukaz[g][strlen(argv[i + (g * 3)]) + lenh], " ", 1);
             lenh = strlen(argv[i + (g * 3)]) + lenh + 1;
         }
-        lenargvs[g + 1] = lenh; // длина каждых 3х аргументов
+        lenh = 0;
     }
 
-    for (int f = 0; f < argc / 3; f++)
-    {
-        strncpy(mass_of_ukaz[f],&bufarg[lenargvs[f]],lenargvs[f + 1] - lenargvs[f] - 1);
-    }
-    
     int P_pipe[argc / 3][2]; // каналы для родителя к дочерним
     int pipes[argc / 3][2]; // каналы дочерних
     pid_t childpid[argc / 3];
