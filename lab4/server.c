@@ -42,7 +42,11 @@ void server(int readfd, int writefd)
 
         if ((buff[i+1] == ' ') && (trig == 1))
         {
-            memccpy(outfile,&buff[p + 1], ' ', 15);
+            memcpy(
+                outfile,
+                &buff[p + 1],
+                (int)(strchr(&buff[p + 1], ' ') - &buff[p + 1])
+            );
             trig++;
             p = i;
         }
@@ -50,7 +54,7 @@ void server(int readfd, int writefd)
         if ((buff[i+1] == ' ') && (trig == 2))
         {
             simvol = buff[i + 2];
-            printf("simvol -- %c\n", simvol);
+            //printf("simvol -- %c\n", simvol);
             break;
         }
         
@@ -101,9 +105,6 @@ void server(int readfd, int writefd)
         printf ("close output error\n"); exit(-7);
     }
 
-    /* файл успешно открыт и копируется в канал */
-    while ( (n = read(fd, buff, MAXLINE)) > 0)
-        write(writefd, buff, n);
 
     close(fd);
 }
