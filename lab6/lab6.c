@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
     key = 10;
     pid_t cpid = 0;
 
-    // --- работа c симофором
+    // --- работа c семофором
     int rc = 1;
     int semid = 0;
     struct sembuf sops[2];

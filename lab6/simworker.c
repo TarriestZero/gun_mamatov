@@ -13,7 +13,7 @@ void cleanup(int rc, int semid){
     exit(rc);
 }
 
-//инициализация симафора
+//инициализация семафора
 int init_sim(struct sembuf sops[2], int* rc, int* semid, int op, int semflag)
 {
     key_t keysf = 0;

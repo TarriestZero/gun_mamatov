@@ -116,7 +116,7 @@ int server(key_t key, int n)
     message_buf  rbuf;
     ssize_t l;
 
-    // --- работа c симофором
+    // --- работа c семофором
     int rc = 1;
     int semid = 0;
     struct sembuf sops[2];
