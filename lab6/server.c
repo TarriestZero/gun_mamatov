@@ -105,7 +105,7 @@ int write_in_file(char* infile, char* outfile, char simvol){
 int server(key_t key, int n)
 {
     int semid,shmid;
-    struct sembuf sops;
+    struct sembuf sops[2];
     char *shmaddr, st = 0;
     char str[MSGSZ];
     key_t keysf = 0;;
@@ -114,23 +114,27 @@ int server(key_t key, int n)
     if ((shmid = shmget(keysf, 256, 0666)) < 0) { perror("shmget"); return 1; }
     if ((shmaddr = (char*)shmat(shmid, NULL, 0)) == (void*)-1) { perror("shmat"); return 1; }
 
-    semid = semget(keysf, 1, 0666);
-    sops.sem_num = 0;
-    sops.sem_flg = 0;
-
+    semid = semget(keysf, 2, 0666);
+    sops[0].sem_num = 0;
+    sops[0].sem_flg = 0;
+    sops[1].sem_num = 0;
+    sops[1].sem_flg = 0;
 
     char simvol;
     char infile[30] = "";
     char outfile[30] = "";
     int g;
+    //открываем доступ клиенту
+    sops[1].sem_op = 1; 
+    semop(semid, &sops[1], 1);
     for (int i = 0; i < n; i++)
     {   
         memset(infile, 0, sizeof(infile));
         memset(outfile, 0, sizeof(infile));
         g = 0;
         printf("SERVER> Waiting access to shared buffer\n");
-        sops.sem_op = -1;
-        semop(semid, &sops, 1);
+        sops[0].sem_op = -1;
+        semop(semid, &sops[0], 1);
         // Читаем строку
         strcpy(str, shmaddr);
         printf("SERVER> String: %s\n", str);
@@ -143,6 +147,9 @@ int server(key_t key, int n)
             g++;
         }
         get_arguments(&simvol, infile, outfile, str, g);
+        //открываем доступ клиенту
+        sops[1].sem_op = 1; 
+        semop(semid, &sops[1], 1);
         if (write_in_file(infile, outfile, simvol) < 0){
             printf("error in write_in_file");
             return -1;

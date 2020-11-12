@@ -16,7 +16,7 @@
 int client(key_t key, int n, char massive[][30])
 {
     int semid, shmid;
-    struct sembuf sops;
+    struct sembuf sops[2];
     char *shmaddr;
     char str[MSGSZ];
     key_t keysf = 0;;
@@ -24,21 +24,28 @@ int client(key_t key, int n, char massive[][30])
     if ((shmid = shmget(keysf, 256, IPC_CREAT | 0666)) < 0) { perror("shmget"); return 1; }
     if ((shmaddr = (char*)shmat(shmid, NULL, 0)) == (void*)-1) { perror("shmat"); return 1; }
 
-    semid = semget(keysf, 1, IPC_CREAT | 0666);
+    semid = semget(keysf, 2, IPC_CREAT | 0666);
     semctl(semid, 0, IPC_SET, 0);
-    sops.sem_num = 0;
-    sops.sem_flg = 0;
-    
+    sops[0].sem_num = 0;
+    sops[0].sem_flg = 0;
+    sops[1].sem_num = 0;
+    sops[1].sem_flg = 0;
+
+    //ждем готовность сервера
+    sops[1].sem_op = -1;
+    semop(semid, &sops[1], 1);
     // ---- отправка пачек
     for (int i = 0; i < n; i++){
-        sleep(1);
+        sleep(0.1);
         strcpy(shmaddr, massive[i]);
         printf("CLIENT> packege %d copied to the shared buffer\n", i);
         // Освобождаем доступ
-        sops.sem_op = 1; 
-        semop(semid, &sops, 1);
+        sops[0].sem_op = 1; 
+        semop(semid, &sops[0], 1);
         printf("CLIENT> Access released to the shared buffer\n");
-        
+        //ждем готовность сервера
+        sops[1].sem_op = -1;
+        semop(semid, &sops[1], 1);
     }
     shmdt(shmaddr); 
     semctl(semid,0,IPC_RMID, 0); 
