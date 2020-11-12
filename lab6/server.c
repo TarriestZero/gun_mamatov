@@ -108,13 +108,12 @@ int server(key_t key, int n)
     struct sembuf sops[2];
     char *shmaddr, st = 0;
     char str[MSGSZ];
-    key_t keysf = 0;;
-    keysf = ftok(".", 'a');
 
-    if ((shmid = shmget(keysf, 256, 0666)) < 0) { perror("shmget"); return 1; }
+
+    if ((shmid = shmget(key, 256, 0666)) < 0) { perror("shmget"); return 1; }
     if ((shmaddr = (char*)shmat(shmid, NULL, 0)) == (void*)-1) { perror("shmat"); return 1; }
 
-    semid = semget(keysf, 2, 0666);
+    semid = semget(key, 2, 0666);
     sops[0].sem_num = 0;
     sops[0].sem_flg = 0;
     sops[1].sem_num = 0;
@@ -125,6 +124,7 @@ int server(key_t key, int n)
     char outfile[30] = "";
     int g;
     //открываем доступ клиенту
+    printf("SERVER> Start\n");
     sops[1].sem_op = 1; 
     semop(semid, &sops[1], 1);
     for (int i = 0; i < n; i++)
@@ -148,12 +148,13 @@ int server(key_t key, int n)
         }
         get_arguments(&simvol, infile, outfile, str, g);
         //открываем доступ клиенту
-        sops[1].sem_op = 1; 
-        semop(semid, &sops[1], 1);
+        
         if (write_in_file(infile, outfile, simvol) < 0){
             printf("error in write_in_file");
             return -1;
         }
+        sops[1].sem_op = 1; 
+        semop(semid, &sops[1], 1);
     }
     shmdt(shmaddr);
 
