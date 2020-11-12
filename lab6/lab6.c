@@ -13,14 +13,8 @@
 int main(int argc, char *argv[]){
 
     key_t key;
-    key = 10;
+    key = 12550;
     pid_t cpid = 0;
-
-    // --- работа c семофором
-    int rc = 1;
-    int semid = 0;
-    struct sembuf sops[2];
-    // ---
 
     char lenh = 0, g;  
     int lenhsend = 0; // для передачи в функции
@@ -43,8 +37,6 @@ int main(int argc, char *argv[]){
         }
         lenh = 0;
     }
-    init_sim(sops, &rc, &semid, 0, IPC_CREAT | 0666);
-    client(key, argc / 3, mass_of_ukaz);
     cpid = fork();
     if (cpid < 0) {
         perror("fork");
@@ -53,13 +45,9 @@ int main(int argc, char *argv[]){
     else if (cpid == 0) {
         printf("server pid is %d\n", getpid());
         server(key, argc / 3);
+        printf("...Done...\n");
     }
     else {
-        printf("client pid is %d and server pid is %d\n", getpid(), cpid);
-        sleep(1);
-        printf("wait complete task from server\n");
-        wait_sim(sops, &rc, &semid);
+        client(key, argc / 3, mass_of_ukaz);
     }
-    printf("...Done...\n");
-
 }

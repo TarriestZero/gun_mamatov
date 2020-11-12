@@ -5,28 +5,21 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
+#include <sys/shm.h>
 #include <sys/msg.h>
 #include <fcntl.h> 
 #include <stdlib.h>
-#include "myhead.h"
 
 #define MSGSZ     128
 #define BUF_SIZE 1024
-
-
-
-typedef struct msgbuf {
-    long    mtype;
-    char    mtext[MSGSZ];
-} message_buf;
 
 
 // получение аргрументов из строки (передаваемой пачки из 3х аргументов)
 void get_arguments(char* simvol, char* infile, char* outfile, char buff[MSGSZ],ssize_t n){
 
     int p, trig = 0;
-    buff[n] = '\0';	/* полное имя завершается 0 */
-    *simvol = buff[n - 1];
+    buff[n + 1] = '\0';	/* полное имя завершается 0 */
+    *simvol = buff[n];
     for (int i = 0; i < n; i++)
     {
         if (((int)buff[i] == ' ') && (trig == 0)){ 
@@ -111,39 +104,50 @@ int write_in_file(char* infile, char* outfile, char simvol){
 
 int server(key_t key, int n)
 {
-    int msgid;
-    msgid = msgget(key, 0666);
-    message_buf  rbuf;
-    ssize_t l;
+    int semid,shmid;
+    struct sembuf sops;
+    char *shmaddr, st = 0;
+    char str[MSGSZ];
+    key_t keysf = 0;;
+    keysf = ftok(".", 'a');
 
-    // --- работа c семофором
-    int rc = 1;
-    int semid = 0;
-    struct sembuf sops[2];
-    init_sim(sops, &rc, &semid, 1, 0666);
-    // ----
+    if ((shmid = shmget(keysf, 256, 0666)) < 0) { perror("shmget"); return 1; }
+    if ((shmaddr = (char*)shmat(shmid, NULL, 0)) == (void*)-1) { perror("shmat"); return 1; }
+
+    semid = semget(keysf, 1, 0666);
+    sops.sem_num = 0;
+    sops.sem_flg = 0;
+
 
     char simvol;
     char infile[30] = "";
     char outfile[30] = "";
+    int g;
     for (int i = 0; i < n; i++)
     {   
         memset(infile, 0, sizeof(infile));
         memset(outfile, 0, sizeof(infile));
-        l = msgrcv(msgid, &rbuf, MSGSZ, 1, 0); //прием сообщения
-        if (l < 0) { 
-            perror("msgrcv");
-            exit(1);
+        g = 0;
+        printf("SERVER> Waiting access to shared buffer\n");
+        sops.sem_op = -1;
+        semop(semid, &sops, 1);
+        // Читаем строку
+        strcpy(str, shmaddr);
+        printf("SERVER> String: %s\n", str);
+        for (int i = 0; i < 2; i++)
+        {
+            while (str[g] != ' ')
+            {
+                g++;
+            }
+            g++;
         }
-        printf("recv %s\n", rbuf.mtext);
-        get_arguments(&simvol, infile, outfile, rbuf.mtext, l);
+        get_arguments(&simvol, infile, outfile, str, g);
         if (write_in_file(infile, outfile, simvol) < 0){
             printf("error in write_in_file");
             return -1;
         }
     }
-    subtraction(sops, &rc, &semid); // сообщаем о заврешении действия
-    rc = 0;
-    cleanup(rc, semid);
+    shmdt(shmaddr);
 
 }

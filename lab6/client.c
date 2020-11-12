@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/sem.h>
+#include <sys/shm.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 
 #define MSGSZ     128
@@ -12,41 +15,33 @@
 
 int client(key_t key, int n, char massive[][30])
 {
-    int msqid;
-    int msgflg = IPC_CREAT | 0666; 
+    int semid, shmid;
+    struct sembuf sops;
+    char *shmaddr;
+    char str[MSGSZ];
+    key_t keysf = 0;;
+    keysf = ftok(".", 'a');
+    if ((shmid = shmget(keysf, 256, IPC_CREAT | 0666)) < 0) { perror("shmget"); return 1; }
+    if ((shmaddr = (char*)shmat(shmid, NULL, 0)) == (void*)-1) { perror("shmat"); return 1; }
 
-    typedef struct msgbuf {
-         long    mtype;
-         char    mtext[MSGSZ];
-         } message_buf;
-    
-    message_buf sbuf;
-    size_t buf_length;
-
-   // printf("Calling msgget with key %#lx and flag %#o\n",key,msgflg);
-
-    if ((msqid = msgget(key, msgflg )) < 0) {
-        perror("msgget");
-        exit(1);
-    }
-    
-    sbuf.mtype = 1;
+    semid = semget(keysf, 1, IPC_CREAT | 0666);
+    semctl(semid, 0, IPC_SET, 0);
+    sops.sem_num = 0;
+    sops.sem_flg = 0;
     
     // ---- отправка пачек
-    for (int i = 0; i < n; i++)
-    {
-        memset(sbuf.mtext, 0, MSGSZ);
-        (void) strcpy(sbuf.mtext, massive[i]);
-     
-        printf("msgget: msgget succeeded: msqid = %d\n", msqid);
-        buf_length = strlen(sbuf.mtext) + 1;
-        if (msgsnd(msqid, &sbuf, buf_length, IPC_NOWAIT) < 0) {
-            printf ("%d, %ld, %s, %ld\n", msqid, sbuf.mtype, sbuf.mtext, buf_length);
-            perror("msgsnd");
-            exit(1);
-        }
-        else 
-            printf("Message: \"%s\" Send\n", sbuf.mtext);
+    for (int i = 0; i < n; i++){
+        sleep(1);
+        strcpy(shmaddr, massive[i]);
+        printf("CLIENT> packege %d copied to the shared buffer\n", i);
+        // Освобождаем доступ
+        sops.sem_op = 1; 
+        semop(semid, &sops, 1);
+        printf("CLIENT> Access released to the shared buffer\n");
+        
     }
+    shmdt(shmaddr); 
+    semctl(semid,0,IPC_RMID, 0); 
+    shmctl(shmid,IPC_RMID,NULL); 
     return(0);
 }
