@@ -19,7 +19,7 @@ int client(key_t key, int n, char massive[][30])
     struct sembuf sops[2];
     char *shmaddr;
     char str[MSGSZ];
-    if ((shmid = shmget(key, 256, IPC_CREAT | 0666)) < 0) { perror("shmget"); return 1; }
+    if ((shmid = shmget(key, MSGSZ, IPC_CREAT | 0666)) < 0) { perror("shmget"); return 1; }
     if ((shmaddr = (char*)shmat(shmid, NULL, 0)) == (void*)-1) { perror("shmat"); return 1; }
 
     semid = semget(key, 2, IPC_CREAT | 0666);
@@ -36,6 +36,7 @@ int client(key_t key, int n, char massive[][30])
     // ---- отправка пачек
     for (int i = 0; i < n; i++){
         //sleep(0.2);
+        memset(shmaddr, 0, MSGSZ);
         strcpy(shmaddr, massive[i]);
         printf("CLIENT> packege %d copied to the shared buffer\n", i);
         // Освобождаем доступ

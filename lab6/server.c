@@ -110,7 +110,7 @@ int server(key_t key, int n)
     char str[MSGSZ];
 
 
-    if ((shmid = shmget(key, 256, 0666)) < 0) { perror("shmget"); return 1; }
+    if ((shmid = shmget(key, MSGSZ, 0666)) < 0) { perror("shmget"); return 1; }
     if ((shmaddr = (char*)shmat(shmid, NULL, 0)) == (void*)-1) { perror("shmat"); return 1; }
 
     semid = semget(key, 2, 0666);
