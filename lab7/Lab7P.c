@@ -26,9 +26,7 @@ int main(int argc, char const *argv[])
         memset(general.mass[i], ' ', 30);
     }
     
-    
     int lenh = 0, g;  
-    int lenhsend = 0; // для передачи в функции
 
     if (!(((argc - 1) % 3) == 0) || (argc < 3)) {
         printf("Usage: file textfile1 textfile2 simvol ...\n");
@@ -44,9 +42,10 @@ int main(int argc, char const *argv[])
             strncpy(&mass_of_ukaz[g][lenh], argv[i + (g * 3)], strlen(argv[i + (g * 3)]));
             strncpy(&mass_of_ukaz[g][strlen(argv[i + (g * 3)]) + lenh], " ", 1);
             lenh = strlen(argv[i + (g * 3)]) + lenh + 1;
-            lenhsend = lenhsend + lenh;
-            general.mass[g] = mass_of_ukaz[g];
+            
         }
+        memset(&mass_of_ukaz[g][lenh], 0, 30 - lenh);
+        general.mass[g] = mass_of_ukaz[g];
         general.lenght[g] = lenh - 1;
         lenh = 0;
     }
