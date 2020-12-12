@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < argc / 3; i++)
     {
-        printf("Client translate...");
+        printf("Client translate...\n");
         sendto(udp_socket, (const char *)mass_of_ukaz[i], strlen(mass_of_ukaz[i]), 
             0, (const struct sockaddr *) &servaddr,  
             sizeof(servaddr)); 
