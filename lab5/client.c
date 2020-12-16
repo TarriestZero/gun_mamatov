@@ -52,5 +52,6 @@ int client(key_t key, int n, char massive[][30])
         else 
             printf("Message: \"%s\" Send\n", sbuf.mtext);
     }
+    msgctl(msqid, IPC_RMID, NULL);
     return(0);
 }
