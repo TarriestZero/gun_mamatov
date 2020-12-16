@@ -135,5 +135,6 @@ int server(key_t key, int n)
             return -1;
         }
     }
+    msgctl(msqid, IPC_RMID, NULL);
     return(0);
 }
